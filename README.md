@@ -2,8 +2,6 @@
 
 This repository showcases an AWS-based threat detection solution using **AWS GuardDuty**, **Amazon EventBridge**, **AWS Lambda**, and **Amazon SNS**. The solution is deployed using **Terraform** and is designed to monitor and detect malicious activity within a single AWS account. High-severity findings trigger email notifications to the security team.
 
----
-
 ## Table of Contents
 
 - [Overview](#overview)
@@ -18,8 +16,6 @@ This repository showcases an AWS-based threat detection solution using **AWS Gua
 - [License](#license)
 - [Contact](#contact)
 
----
-
 ## Overview
 
 This project implements a threat detection solution that:
@@ -29,8 +25,6 @@ This project implements a threat detection solution that:
 - Uses an **AWS Lambda Function** to format findings into human-readable messages.
 - Sends email notifications via **Amazon SNS** to the security team.
 - Deploys the entire infrastructure using **Terraform** for consistency and automation.
-
----
 
 ## Architecture
 
@@ -62,16 +56,12 @@ The solution architecture is as follows:
 6. **IAM Roles and Policies**
    - Provide necessary permissions for services to interact securely.
 
----
-
 ## Prerequisites
 
 - **AWS Account** with appropriate permissions to create resources.
 - **AWS CLI** installed and configured.
 - **Terraform** installed (version 0.12 or higher).
 - **An Email Address** to receive notifications.
-
----
 
 ## Deployment Steps
 
@@ -196,8 +186,6 @@ terraform apply
 
 > **Note:** This is the email you receive to confirm your subscription.
 
----
-
 ## Testing the Setup
 
 ### 1. Generate Sample GuardDuty Findings
@@ -266,8 +254,6 @@ https://us-east-1.console.aws.amazon.com/guardduty/home?region=us-east-1#/findin
 
 > **Note:** The logs show successful execution of the Lambda function.
 
----
-
 ## Cleanup
 
 To avoid incurring charges, destroy the resources when they are no longer needed:
@@ -277,8 +263,6 @@ terraform destroy
 ```
 
 Type `yes` to confirm.
-
----
 
 ## Cost Considerations
 
@@ -296,13 +280,9 @@ Type `yes` to confirm.
 - **EventBridge:**
   - **Events:** Costs are based on the number of events processed.
 
----
-
 ## Conclusion
 
 This project demonstrates how to set up a cost-effective threat detection solution using AWS services. By leveraging GuardDuty for threat detection, Lambda for processing, and SNS for notifications, organizations can proactively monitor their AWS environments and respond to high-severity security findings promptly.
-
----
 
 ## References
 
@@ -313,19 +293,13 @@ This project demonstrates how to set up a cost-effective threat detection soluti
 - [Terraform AWS Provider](https://registry.terraform.io/providers/hashicorp/aws/latest/docs)
 - [AWS Architecture Icons](https://aws.amazon.com/architecture/icons/)
 
----
-
 ## License
 
 This project is licensed under the MIT License. See the [LICENSE](LICENSE) file for details.
 
----
-
 ## Contact
 
 For any questions or suggestions, please contact [rbarvind04@gmail.com](mailto:rbarvind04@gmail.com).
-
----
 
 **Disclaimer:** Ensure you have the necessary permissions and have reviewed AWS's policies before deploying this solution. Monitor your AWS usage to avoid unexpected charges.
 
