@@ -171,23 +171,11 @@ cd aws-guardduty-threat-detection
 terraform init
 ```
 
-#### Screenshot: Terraform Initialization
-
-![Terraform Init Output](images/terraform_init.png)
-
-> **Note:** The screenshot shows successful initialization of Terraform.
-
 ### 5. Review the Execution Plan
 
 ```bash
 terraform plan
 ```
-
-#### Screenshot: Terraform Plan Output
-
-![Terraform Plan Output](images/terraform_plan.png)
-
-> **Note:** Review the plan to ensure all resources will be created as expected.
 
 ### 6. Apply the Configuration
 
@@ -196,12 +184,6 @@ terraform apply
 ```
 
 - Type `yes` when prompted to confirm.
-
-#### Screenshot: Terraform Apply Output
-
-![Terraform Apply Output](images/terraform_apply.png)
-
-> **Note:** The screenshot shows successful creation of resources.
 
 ### 7. Confirm SNS Subscription
 
