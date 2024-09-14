@@ -69,7 +69,7 @@ The solution architecture is as follows:
 - **AWS Account** with appropriate permissions to create resources.
 - **AWS CLI** installed and configured.
 - **Terraform** installed (version 0.12 or higher).
-- **An Email Address** to receive notifications (e.g., `arviiyer@proton.me`).
+- **An Email Address** to receive notifications.
 
 ---
 
