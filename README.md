@@ -278,12 +278,6 @@ terraform destroy
 
 Type `yes` to confirm.
 
-#### Screenshot: Terraform Destroy Output
-
-![Terraform Destroy Output](images/terraform_destroy.png)
-
-> **Note:** The screenshot shows resources being destroyed.
-
 ---
 
 ## Cost Considerations
