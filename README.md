@@ -161,7 +161,7 @@ cd aws-guardduty-threat-detection
   variable "email_address" {
     description = "Email address to receive SNS notifications"
     type        = string
-    default     = "arviiyer@proton.me"
+    default     = "example@email" #insert your email address here
   }
   ```
 
