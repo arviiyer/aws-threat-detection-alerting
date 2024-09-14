@@ -32,8 +32,6 @@ The solution architecture is as follows:
 
 ![Architecture Diagram](images/architecture_diagram.png)
 
-> **Note:** The architecture diagram illustrates the flow of data and interactions between AWS services.
-
 ### Components
 
 1. **AWS GuardDuty**
@@ -207,12 +205,10 @@ terraform apply
 
 ![Generate Sample Findings](images/generate_sample_findings.png)
 
-> **Note:** The screenshot shows the option to generate sample findings.
-
 ### 2. Verify Email Notifications
 
 - Check your email for a notification from the SNS topic.
-- The email should contain a formatted message with details about the GuardDuty finding.
+- The email should contain a formatted message with details about the GuardDuty findings.
 
 #### Sample Email Notification
 
