@@ -2,8 +2,6 @@
 
 This repository showcases an AWS-based threat detection solution using **AWS GuardDuty**, **Amazon EventBridge**, **AWS Lambda**, and **Amazon SNS**. The solution is deployed using **Terraform** and is designed to monitor and detect malicious activity within a single AWS account. High-severity findings trigger email notifications to the security team.
 
-![Architecture Diagram](images/architecture_diagram.png)
-
 ---
 
 ## Table of Contents
