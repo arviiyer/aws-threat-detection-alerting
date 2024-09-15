@@ -28,8 +28,6 @@ This project implements a threat detection solution that:
 
 ## Architecture
 
-The solution architecture is as follows:
-
 ![Architecture Diagram](images/architecture_diagram.png)
 
 ### Components
