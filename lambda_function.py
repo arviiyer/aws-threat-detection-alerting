@@ -7,7 +7,6 @@ sns_topic_arn = os.environ['SNS_TOPIC_ARN']
 
 def lambda_handler(event, context):
     # Parse the GuardDuty finding
-    
     detail = event.get('detail', {})
     finding_type = detail.get('type', 'Unknown')
     severity = detail.get('severity', 'Unknown')
