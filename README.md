@@ -56,7 +56,7 @@ This project implements a threat detection solution that:
 
 - **AWS Account** with appropriate permissions to create resources.
 - **AWS CLI** installed and configured.
-- **Terraform** installed (version 0.12 or higher).
+- **Terraform** installed.
 - **An Email Address** to receive notifications.
 
 ## Deployment Steps
