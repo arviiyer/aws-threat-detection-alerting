@@ -7,5 +7,11 @@ variable "aws_region" {
 variable "email_address" {
   description = "Email address to receive SNS notifications"
   type        = string
-  default     = "example@email.com"
+  default     = "rbarvind04@gmail.com"
+}
+
+variable "slack_bot_token" {
+  description = "Slack Bot OAuth for chat.postMessage"
+  type        = string
+  sensitive   = true
 }

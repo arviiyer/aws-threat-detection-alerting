@@ -26,8 +26,8 @@ resource "aws_iam_role" "lambda_role" {
   assume_role_policy = jsonencode({
     Version = "2012-10-17",
     Statement = [{
-      Action    = "sts:AssumeRole",
-      Effect    = "Allow",
+      Action = "sts:AssumeRole",
+      Effect = "Allow",
       Principal = {
         Service = "lambda.amazonaws.com"
       }
@@ -73,7 +73,8 @@ resource "aws_lambda_function" "guardduty_formatter" {
 
   environment {
     variables = {
-      SNS_TOPIC_ARN = aws_sns_topic.guardduty_sns_topic.arn
+      SNS_TOPIC_ARN   = aws_sns_topic.guardduty_sns_topic.arn
+      SLACK_BOT_TOKEN = var.slack_bot_token
     }
   }
 }
@@ -84,9 +85,9 @@ resource "aws_cloudwatch_event_rule" "guardduty_high_severity_rule" {
   description = "Capture high-severity GuardDuty findings"
 
   event_pattern = jsonencode({
-    source      = ["aws.guardduty"],
+    source        = ["aws.guardduty"],
     "detail-type" = ["GuardDuty Finding"],
-    detail      = {
+    detail = {
       severity = [{ numeric = [">", 6.9] }]
     }
   })
