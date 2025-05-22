@@ -2,24 +2,24 @@ provider "aws" {
   region = var.aws_region
 }
 
-# Enable GuardDuty
+# enable guardduty
 resource "aws_guardduty_detector" "gd_detector" {
   enable = true
 }
 
-# Create SNS Topic
+# create sns topic
 resource "aws_sns_topic" "guardduty_sns_topic" {
   name = "guardduty-high-severity-topic"
 }
 
-# Create SNS Subscription
+# create sns subscription
 resource "aws_sns_topic_subscription" "email_subscription" {
   topic_arn = aws_sns_topic.guardduty_sns_topic.arn
   protocol  = "email"
   endpoint  = var.email_address
 }
 
-# IAM Role for Lambda
+# iam role for lambda
 resource "aws_iam_role" "lambda_role" {
   name = "guardduty_lambda_role"
 
@@ -35,13 +35,13 @@ resource "aws_iam_role" "lambda_role" {
   })
 }
 
-# IAM Policy Attachment for Lambda Logging
+# iam policy attachment for lambda logging
 resource "aws_iam_role_policy_attachment" "lambda_logging" {
   role       = aws_iam_role.lambda_role.name
   policy_arn = "arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole"
 }
 
-# IAM Policy for Lambda to Publish to SNS
+# iam policy for lambda to publish to sns
 resource "aws_iam_policy" "lambda_sns_publish_policy" {
   name = "lambda_sns_publish_policy"
 
@@ -55,7 +55,7 @@ resource "aws_iam_policy" "lambda_sns_publish_policy" {
   })
 }
 
-# IAM Policy for EC2 DescribeInstances Access
+# iam policy for ec2 describeinstances access
 resource "aws_iam_policy" "lambda_ec2_describe_policy" {
   name = "lambda_ec2_describe_policy"
 
@@ -71,27 +71,49 @@ resource "aws_iam_policy" "lambda_ec2_describe_policy" {
   })
 }
 
-# Attach the EC2 Describe Policy to Lambda Role
+# iam policy for EC2 Isolation
+resource "aws_iam_policy" "lambda_ec2_isolate_policy" {
+  name = "lambda_ec2_isolate_policy"
+
+  policy = jsonencode({
+    Version = "2012-10-17",
+    Statement = [{
+      Effect = "Allow",
+      Action = [
+        "ec2:ModifyInstanceAttribute"
+      ],
+      Resource = "*"
+    }]
+  })
+}
+
+#attach ec2 isolation policy to lambda role
+resource "aws_iam_role_policy_attachment" "lambda_ec2_isolate" {
+  role       = aws_iam_role.lambda_role.name
+  policy_arn = aws_iam_policy.lambda_ec2_isolate_policy.arn
+}
+
+# attach the ec2 describe policy to lambda role
 resource "aws_iam_role_policy_attachment" "lambda_ec2_describe" {
   role       = aws_iam_role.lambda_role.name
   policy_arn = aws_iam_policy.lambda_ec2_describe_policy.arn
 }
 
-# Attach the SNS Publish Policy to Lambda Role
+# attach the sns publish policy to lambda role
 resource "aws_iam_role_policy_attachment" "lambda_sns_publish" {
   role       = aws_iam_role.lambda_role.name
   policy_arn = aws_iam_policy.lambda_sns_publish_policy.arn
 }
 
-# Create Lambda Function
+# create lambda function for guardduty alert notification, enrichment and formatting
 resource "aws_lambda_function" "guardduty_formatter" {
   function_name = "guardduty_formatter"
   role          = aws_iam_role.lambda_role.arn
-  handler       = "lambda_function.lambda_handler"
+  handler       = "guardduty_formatter.lambda_handler"
   runtime       = "python3.9"
 
-  filename         = "lambda_function.zip"
-  source_code_hash = filebase64sha256("lambda_function.zip")
+  filename         = "guardduty_formatter.zip"
+  source_code_hash = filebase64sha256("guardduty_formatter.zip")
 
   environment {
     variables = {
@@ -101,32 +123,59 @@ resource "aws_lambda_function" "guardduty_formatter" {
   }
 }
 
-# EventBridge Rule for High-Severity Findings
+# create lambda function for ec2 isolation
+resource "aws_lambda_function" "ec2_isolation_handler" {
+  function_name = "ec2_isolation_handler"
+  role          = aws_iam_role.lambda_role.arn
+  handler       = "ec2_isolation_handler.lambda_handler"
+  runtime       = "python3.9"
+
+  filename         = "ec2_isolation_handler.zip"
+  source_code_hash = filebase64sha256("ec2_isolation_handler.zip")
+
+  environment {
+    variables = {
+      QUARANTINE_SG_ID     = aws_security_group.quarantine_sg.id
+      SLACK_SIGNING_SECRET = var.slack_signing_secret
+    }
+  }
+}
+
+# eventbridge rule for high-severity findings
 resource "aws_cloudwatch_event_rule" "guardduty_high_severity_rule" {
   name        = "guardduty-high-severity-rule"
-  description = "Capture high-severity GuardDuty findings"
+  description = "capture high-severity guardduty findings"
 
   event_pattern = jsonencode({
     source        = ["aws.guardduty"],
-    "detail-type" = ["GuardDuty Finding"],
+    "detail-type" = ["guardduty finding"],
     detail = {
       severity = [{ numeric = [">", 6.9] }]
     }
   })
 }
 
-# Permission for EventBridge to Invoke Lambda
+# permission for eventbridge to invoke lambda
 resource "aws_lambda_permission" "allow_eventbridge" {
-  statement_id  = "AllowExecutionFromEventBridge"
-  action        = "lambda:InvokeFunction"
+  statement_id  = "allowexecutionfromeventbridge"
+  action        = "lambda:invokefunction"
   function_name = aws_lambda_function.guardduty_formatter.function_name
   principal     = "events.amazonaws.com"
   source_arn    = aws_cloudwatch_event_rule.guardduty_high_severity_rule.arn
 }
 
-# EventBridge Target to Lambda
+# eventbridge target to lambda
 resource "aws_cloudwatch_event_target" "lambda_target" {
   rule      = aws_cloudwatch_event_rule.guardduty_high_severity_rule.name
   target_id = "guardduty-lambda"
   arn       = aws_lambda_function.guardduty_formatter.arn
+}
+
+# isolation security group
+resource "aws_security_group" "quarantine_sg" {
+  name        = "quarantine-sg"
+  description = "Security group that blocks all inbound and outbound traffic"
+  vpc_id      = var.vpc_id # Using default vpc as the variable for now
+
+  # No ingress or egress rules here which blocks all traffic by default
 }

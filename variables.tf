@@ -15,3 +15,14 @@ variable "slack_bot_token" {
   type        = string
   sensitive   = true
 }
+
+variable "slack_signing_secret" {
+  description = "Slack app signing secret for verifying requests"
+  type        = string
+  sensitive   = true
+}
+
+variable "vpc_id" {
+  description = "The VPC ID to create the quarantine security group in"
+  type        = string
+}

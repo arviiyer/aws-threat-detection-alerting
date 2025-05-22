@@ -112,7 +112,30 @@ Link to Finding:
 
     slack_payload = {
         "channel": slack_channel,
-        "text": f"*{subject}*\n*Severity:* {severity}\n*Region:* {region}\n*Type:* {finding_type}\n*Description:* {description}\n{ec2_enrichment_text}\n<{console_link}|View in Console>"
+        "blocks": [
+            {
+                "type": "section",
+                "text": {
+                    "type": "mrkdwn",
+                    "text": f"*{subject}*\n*Severity:* {severity}\n*Region:* {region}\n*Type:* {finding_type}\n*Description:* {description}\n\n{ec2_enrichment_text}\n\n<{console_link}|View in Console>"
+                }
+            },
+            {
+                "type": "actions",
+                "elements": [
+                    {
+                        "type": "button",
+                        "text": {
+                            "type": "plain_text",
+                            "text": "🛑 Quarantine EC2"
+                        },
+                        "style": "danger",
+                        "value": instance_id if instance_id else "no-instance",
+                        "action_id": "quarantine_instance"
+                    }
+                ]
+            }
+        ]
     }
 
     try:
@@ -125,3 +148,4 @@ Link to Finding:
         'statusCode': 200,
         'body': json.dumps('Notification sent to SNS and Slack')
     }
+
