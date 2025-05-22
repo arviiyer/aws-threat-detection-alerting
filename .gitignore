@@ -61,5 +61,5 @@ Thumbs.db
 test-output/
 
 #Ignore locally installed python packages
-python/*
-!python/*.py
+detection/*
+response/*
