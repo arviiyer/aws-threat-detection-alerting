@@ -63,3 +63,6 @@ test-output/
 #Ignore locally installed python packages
 detection/*
 response/*
+
+# Ignore zip files
+*.zip
