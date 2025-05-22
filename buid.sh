@@ -24,7 +24,7 @@ cd ..
 mkdir -p response
 
 # Install dependencies to respone/
-# No dependencies so far for response. Add here if it changes
+pip install -r requirements.txt -t response/
 
 # Copy lambda function code
 cp ec2_isolation_handler.py response
