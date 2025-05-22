@@ -179,3 +179,41 @@ resource "aws_security_group" "quarantine_sg" {
 
   # No ingress or egress rules here which blocks all traffic by default
 }
+
+# Create HTTP API Gateway
+resource "aws_apigatewayv2_api" "slack_isolation_api" {
+  name          = "slack-ec2-isolation-api"
+  protocol_type = "HTTP"
+}
+
+# Create Lambda Integration for the API Gateway
+resource "aws_apigatewayv2_integration" "lambda_integration" {
+  api_id                 = aws_apigatewayv2_api.slack_isolation_api.id
+  integration_type       = "AWS_PROXY"
+  integration_uri        = aws_lambda_function.ec2_isolation_handler.invoke_arn
+  integration_method     = "POST"
+  payload_format_version = "2.0"
+}
+
+# Define the Route (POST /slack/interaction)
+resource "aws_apigatewayv2_route" "slack_interaction_route" {
+  api_id    = aws_apigatewayv2_api.slack_isolation_api.id
+  route_key = "POST /slack/interaction"
+  target    = "integrations/${aws_apigatewayv2_integration.lambda_integration.id}"
+}
+
+# Deploy the API
+resource "aws_apigatewayv2_stage" "default" {
+  api_id      = aws_apigatewayv2_api.slack_isolation_api.id
+  name        = "$default"
+  auto_deploy = true
+}
+
+# Allow API Gateway to Invoke Lambda
+resource "aws_lambda_permission" "allow_apigw" {
+  statement_id  = "AllowExecutionFromAPIGateway"
+  action        = "lambda:InvokeFunction"
+  function_name = aws_lambda_function.ec2_isolation_handler.function_name
+  principal     = "apigateway.amazonaws.com"
+  source_arn    = "${aws_apigatewayv2_api.slack_isolation_api.execution_arn}/*/*"
+}
