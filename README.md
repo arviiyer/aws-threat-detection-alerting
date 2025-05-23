@@ -1,34 +1,39 @@
-# AWS GuardDuty Threat Detection & Response
+# AWS GuardDuty Alert & Response Orchestrator
 
-This repository showcases a modern AWS-based threat detection and response solution using AWS GuardDuty, Amazon EventBridge, AWS Lambda, Amazon SNS, and Slack. The solution is deployed via Terraform and is designed to monitor malicious activity in your AWS account, notify your team in real-time, and provide one-click remediation for EC2-related threats.
+This repository implements a modern, serverless security automation framework using AWS GuardDuty, Amazon EventBridge, AWS Lambda, Amazon SNS, Amazon API Gateway, and Slack. Built and deployed with Terraform, the solution is designed to detect threats in your AWS environment, notify your team in real-time, and enable one-click EC2 isolation directly from Slack.
+
+> This solution is a cloud-native incident response pipeline that combines AWS GuardDuty, Slack, and Terraform to deliver real-time alerts and interactive remediation of EC2-based threats — all from your chat window.
 
 ## Table of Contents
 
-- [Overview](#overview)
-- [Architecture](#architecture)
-- [Prerequisites](#prerequisites)
-- [Deployment Steps](#deployment-steps)
-- [Testing the Setup](#testing-the-setup)
-- [Cleanup](#cleanup)
-- [Cost Considerations](#cost-considerations)
-- [Conclusion](#conclusion)
-- [References](#references)
-- [License](#license)
-- [Contact](#contact)
+* [Overview](#overview)
+* [Architecture](#architecture)
+* [Prerequisites](#prerequisites)
+* [Deployment Steps](#deployment-steps)
+* [Slack App Configuration](#slack-app-configuration)
+* [Testing the Setup](#testing-the-setup)
+* [Cleanup](#cleanup)
+* [Cost Considerations](#cost-considerations)
+* [Conclusion](#conclusion)
+* [References](#references)
+* [License](#license)
+* [Contact](#contact)
 
 ## Overview
 
-This project implements a threat detection and response solution that:
+This project implements a complete detection and response workflow that:
 
-- Enables **AWS GuardDuty** to detect suspicious activity.
-- Uses **Amazon EventBridge** to route high-severity findings.
-- Invokes a **Lambda function** to:
-  - Enrich GuardDuty findings with EC2 metadata.
-  - Send alerts to a **Slack channel** and **Amazon SNS**.
-  - Provide a one-click quarantine action via Slack.
-- Invokes a second **Lambda function** to isolate EC2 instances using a quarantine security group.
-- Deploys the entire solution using **Terraform** for repeatable infrastructure management.
-- Includes a lightweight build script to package Lambda functions for deployment.
+* Enables **AWS GuardDuty** to detect suspicious activity.
+* Uses **Amazon EventBridge** to route high-severity findings.
+* Invokes a **Lambda function** to:
+
+  * Enrich GuardDuty findings with EC2 metadata.
+  * Send alerts to a **Slack channel** and **Amazon SNS**.
+  * Provide a one-click quarantine action via Slack.
+* Provides a secure Slack-to-AWS bridge via **API Gateway**, which forwards interactive requests to another Lambda function.
+* Invokes a second **Lambda function** to isolate EC2 instances using a quarantine security group.
+* Verifies all Slack interactions using HMAC signature validation.
+* Deploys the solution using **Terraform** and packages Lambda functions using a lightweight build script.
 
 ## Architecture
 
@@ -37,55 +42,70 @@ This project implements a threat detection and response solution that:
 ### Components
 
 1. **AWS GuardDuty**
-   - Continuously monitors AWS resources for threats.
+
+   * Continuously monitors AWS resources for threats.
 
 2. **Amazon EventBridge**
-   - Filters and routes high-severity GuardDuty findings to a Lambda function.
 
-3. **Lambda: guardduty_formatter**
-   - Enriches findings with EC2 metadata.
-   - Sends messages to Slack and SNS.
-   - Includes interactive Slack buttons for remediation.
-   - Handles non-EC2 findings gracefully and still reports them.
+   * Filters and routes high-severity GuardDuty findings to a Lambda function.
 
-4. **Lambda: ec2_isolation_handler**
-   - Verifies Slack requests (HMAC validation).
-   - Isolates EC2 instances by modifying their security groups.
-   - Responds in Slack with confirmation.
+3. **Lambda: guardduty\_formatter**
 
-5. **Amazon SNS**
-   - Distributes findings to additional endpoints such as email.
+   * Enriches findings with EC2 metadata (if available).
+   * Sends alerts to Slack and SNS.
+   * Includes interactive Slack buttons for remediation.
+   * Gracefully handles non-EC2 findings.
 
-6. **Slack Integration**
-   - Slack Bot posts alert messages.
-   - Users can click a button to quarantine EC2 instances directly from Slack.
+4. **Amazon SNS**
 
-7. **IAM Roles and Policies**
-   - Grant least-privilege permissions to Lambda functions.
+   * Delivers notifications to additional endpoints such as email.
 
-8. **Build Script (`build.sh`)**
-   - Zips each Lambda function for deployment.
-   - Minimalist approach; does not currently package dependencies.
+5. **Slack Integration**
+
+   * Slack bot posts enriched alerts.
+   * Interactive buttons allow one-click EC2 quarantine.
+
+6. **Amazon API Gateway (HTTP)**
+
+   * Exposes a secure endpoint to receive Slack interactive messages.
+   * Forwards valid requests to the isolation Lambda function.
+
+7. **Lambda: ec2\_isolation\_handler**
+
+   * Validates Slack request signatures.
+   * Applies quarantine security group to EC2 instances.
+   * Posts a success message back to Slack.
+
+8. **IAM Roles and Policies**
+
+   * Grant least-privilege permissions to Lambda functions.
+
+9. **CloudWatch Logs**
+
+   * Captures all Lambda execution logs for troubleshooting.
+
+10. **Build Script (`build.sh`)**
+
+    * Packages each Lambda function with dependencies for deployment.
 
 ## Prerequisites
 
-- AWS account with permissions to deploy GuardDuty, Lambda, SNS, and IAM roles.
-- AWS CLI installed and configured.
-- Terraform installed.
-- Slack workspace with:
-  - Slack Bot token
-  - Signing secret
-  - A channel for alert posting
+* AWS account with permissions to deploy GuardDuty, Lambda, SNS, API Gateway, and IAM roles.
+* AWS CLI installed and configured.
+* Terraform installed.
+* Slack workspace with:
+
+  * Slack Bot token
+  * Signing secret
+  * A channel for alert posting
 
 ## Deployment Steps
-
-Follow these steps to deploy the solution:
 
 ### 1. Clone the Repository
 
 ```bash
-git clone https://github.com/yourusername/aws-guardduty-threat-detection.git
-cd aws-guardduty-threat-detection
+git clone https://github.com/arviiyer/aws-threat-detection-alerting.git
+cd aws-threat-detection-alerting
 ```
 
 ### 2. Prepare `terraform.tfvars`
@@ -98,27 +118,22 @@ slack_signing_secret = "your-slack-signing-secret"
 vpc_id               = "vpc-xxxxxxxxxxxxxx"
 ```
 
-> 🔒 Note: Never commit this file to version control. It contains sensitive credentials and should be listed in your .gitignore.
+> 🔒 Do not commit this file. It contains sensitive credentials and should be listed in your `.gitignore`.
 
 ### 3. Package Lambda Functions
-
-Use the provided `build.sh` script to zip the Lambda function code files:
 
 ```bash
 ./build.sh
 ```
 
-This script creates two zip archives in the current directory:
-- `guardduty_formatter.zip`
-- `ec2_isolation_handler.zip`
+Creates:
 
-These archives will be referenced by Terraform during deployment.
+* `guardduty_formatter.zip`
+* `ec2_isolation_handler.zip`
 
-> 💡 If you add external Python packages later (e.g., requests, boto3), you'll need to update this script to install dependencies into the zip file structure.
+These are referenced by Terraform during deployment.
 
-### 4. Initialize and Deploy
-
-After packaging the Lambda functions, use Terraform to deploy the infrastructure:
+### 4. Initialize and Apply Terraform
 
 ```bash
 terraform init
@@ -126,32 +141,23 @@ terraform plan
 terraform apply
 ```
 
-- `terraform init` prepares the working directory and downloads providers.
-- `terraform plan` shows what Terraform will do.
-- `terraform apply` creates the resources defined in the configuration.
+> ✅ Confirm with `yes` when prompted.
 
-> ✅ When prompted, type `yes` to confirm the deployment.
+### 5. Confirm SNS Email Subscription
 
-### 5. Subscribe to SNS
+Check your inbox and click the **"Confirm subscription"** link from AWS.
 
-If you’ve configured the SNS topic to send email notifications, check your inbox for a subscription confirmation email from AWS.
+## Slack App Configuration
 
-1. Open the email with the subject `AWS Notification - Subscription Confirmation`.
-2. Click the **“Confirm subscription”** link inside the message.
-
-Once confirmed, you’ll start receiving GuardDuty finding alerts via email as well as Slack.
-
-> 📧 Ensure that the email address used is valid and accessible before deployment.
-
-![SNS Confirmation Email](images/sns_confirmation_email.png)
+1. Go to [https://api.slack.com/apps](https://api.slack.com/apps) and create a new app.
+2. Enable **Interactivity** and set the Request URL to your API Gateway endpoint (output from Terraform).
+3. Add **chat\:write**, **commands**, and **incoming-webhook** scopes.
+4. Install the app to your workspace.
+5. Use the bot token and signing secret in your `terraform.tfvars` file.
 
 ## Testing the Setup
 
-### 1. Generate Sample GuardDuty Findings
-
-To simulate real-world threats, use AWS to generate sample GuardDuty findings.
-
-#### Using AWS CLI:
+### 1. Simulate a Finding
 
 ```bash
 aws guardduty create-sample-findings \
@@ -159,106 +165,65 @@ aws guardduty create-sample-findings \
   --finding-types "Recon:EC2/PortProbeUnprotectedPort"
 ```
 
-Using AWS Console:
-1. Go to Amazon GuardDuty in the AWS Console.
-2. Select Settings from the sidebar.
-3. Click “Generate sample findings”.
+Or use the AWS Console to generate sample findings.
 
-![Generate Sample Findings](images/generate_sample_findings.png)
+### 2. Slack Alert
 
-### 2. Verify Slack Notification
+* Check the channel for a new message.
+* If EC2-related, it will contain instance details and a quarantine button.
 
-- Check your designated Slack channel.
+### 3. One-Click Quarantine
 
-- A message should appear with:
-  - Title, severity, description of the finding
-  - Enriched EC2 instance info (if applicable)
-  - - A `🛑 Quarantine EC2` button if an EC2 instance is involved
-
-![Slack Alert Message](images/slack_guardduty_alert.png)
-
-### 3. Click the Slack Button
-
-- Clicking the button triggers the ec2_isolation_handler Lambda.
-- It isolates the instance by applying the quarantine security group.
-- A confirmation message will appear in Slack upon success.
-
-![Slack Quarantine Confirmation](images/slack_quarantine_confirmation.png)
+* Clicking the button sends a secure request to API Gateway.
+* The isolation Lambda updates the instance SG.
+* Slack confirms successful isolation.
 
 ## Cleanup
-
-To remove all deployed resources and avoid ongoing charges, run:
 
 ```bash
 terraform destroy
 ```
 
-- Review the planned deletions.
-- Type yes when prompted to confirm.
-
-> 🧹 This will delete Lambda functions, SNS topics, IAM roles, and any other infrastructure created by this project.
+> 🧹 Removes all deployed resources to prevent ongoing costs.
 
 ## Cost Considerations
 
-This solution leverages mostly free-tier-eligible AWS services, but here’s a breakdown of potential costs:
+* **GuardDuty**: Free for 30 days; usage-based after.
+* **Lambda**: Free tier covers most use cases.
+* **SNS**: Low-cost for email notifications.
+* **API Gateway**: Based on request volume.
+* **Slack**: Free plan supports this integration.
 
-- **AWS GuardDuty**
-  - **Free Tier**: 30-day free trial.
-  - **After Trial**: Charges based on the volume of logs analyzed and number of findings.
-
-- **AWS Lambda**
-  - **Free Tier**: 1 million requests and 400,000 GB-seconds per month.
-  - **After Free Tier**: Minimal cost unless handling a high volume of events.
-
-- **Amazon SNS**
-  - **Email Notifications**: Generally low cost; subject to regional pricing and usage volume.
-
-- **Slack**
-  - **Free Plan**: Slack bots and basic integrations are supported.
-  - **Paid Plans**: May be required for advanced audit logs or increased retention limits.
-
-- **Amazon EventBridge**
-  - **Pricing**: Based on number of events processed per month.
-
-> 💰 Always monitor your AWS billing dashboard to track usage and avoid unexpected charges, especially in production environments.
+> 💡 Always check your AWS billing dashboard.
 
 ## Conclusion
 
-This project demonstrates a robust, scalable, and cost-effective solution for real-time threat detection and response using AWS services. By combining:
+This project delivers a fast, automated, and secure cloud-native incident response system:
 
-- **AWS GuardDuty** for continuous threat monitoring,
-- **EventBridge** for real-time event routing,
-- **Lambda** for enrichment and remediation logic,
-- **Slack** for immediate visibility and interactive response,
+* 🔍 Real-time GuardDuty findings
+* 💬 Slack alerts with actionable context
+* 🖱 One-click EC2 quarantine
+* 🔐 Verified, secure Slack interactions
+* ⚙️ Fully automated via Terraform
 
-you create a modern cloud-native security workflow.
-
-Key benefits include:
-
-- 🔐 Rapid response to EC2-based threats
-- 📬 Multichannel alerting (Slack + SNS/email)
-- 🧠 Context-rich notifications with instance metadata
-- 🛠 Infrastructure-as-code deployment with Terraform
-
-This setup is a strong foundation for more advanced security automation and can be extended to integrate with forensic tools, centralized logging platforms, or cross-account security controls.
+Future improvements could include tagging support, audit logging via DynamoDB, or integration with AWS Security Hub.
 
 ## References
 
-- [AWS GuardDuty Documentation](https://docs.aws.amazon.com/guardduty/latest/ug/what-is-guardduty.html)
-- [AWS Lambda Developer Guide](https://docs.aws.amazon.com/lambda/latest/dg/welcome.html)
-- [Amazon SNS Documentation](https://docs.aws.amazon.com/sns/latest/dg/welcome.html)
-- [Amazon EventBridge Documentation](https://docs.aws.amazon.com/eventbridge/latest/userguide/eb-what-is.html)
-- [Slack API Documentation](https://api.slack.com/)
-- [Terraform AWS Provider](https://registry.terraform.io/providers/hashicorp/aws/latest/docs)
+* [AWS GuardDuty](https://docs.aws.amazon.com/guardduty/latest/ug/what-is-guardduty.html)
+* [AWS Lambda](https://docs.aws.amazon.com/lambda/latest/dg/welcome.html)
+* [Amazon EventBridge](https://docs.aws.amazon.com/eventbridge/latest/userguide/eb-what-is.html)
+* [Amazon SNS](https://docs.aws.amazon.com/sns/latest/dg/welcome.html)
+* [API Gateway](https://docs.aws.amazon.com/apigateway/latest/developerguide/welcome.html)
+* [Slack API](https://api.slack.com/)
+* [Terraform AWS Provider](https://registry.terraform.io/providers/hashicorp/aws/latest/docs)
 
 ## License
 
-This project is licensed under the MIT License. See the [LICENSE](LICENSE) file for details.
+MIT License. See the [LICENSE](LICENSE) file for details.
 
 ## Contact
 
-For questions, issues, or contributions, feel free to reach out:
-
 📧 [rbarvind04@gmail.com](mailto:rbarvind04@gmail.com)
 
-> **Disclaimer**: Ensure you have the appropriate permissions and have reviewed AWS’s best practices and compliance requirements before deploying this solution in a production environment.
+> **Disclaimer**: Ensure appropriate permissions and compliance review before production deployment.
