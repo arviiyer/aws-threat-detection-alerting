@@ -187,6 +187,8 @@ Or use the AWS Console to generate sample findings.
 
 ![Slack Alert Message](images/slack_alert_message.jpg)
 
+> Slack alert with enriched EC2 metadata and quarantine button
+
 ### 3. One-Click Quarantine
 
 * Clicking the button sends a secure request to API Gateway.
@@ -194,6 +196,8 @@ Or use the AWS Console to generate sample findings.
 * Slack confirms successful isolation.
 
 ![Slack Button Interaction](images/slack_button_interaction.jpg)
+
+> Slack confirms the EC2 instance has been isolated
 
 ## Cleanup
 
