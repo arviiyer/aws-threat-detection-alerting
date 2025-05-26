@@ -152,6 +152,8 @@ terraform apply
 
 > ✅ Confirm with `yes` when prompted.
 
+![Terraform Output](images/tfa_output.jpg)
+
 ### 5. Confirm SNS Email Subscription
 
 Check your inbox and click the **"Confirm subscription"** link from AWS.
@@ -163,6 +165,8 @@ Check your inbox and click the **"Confirm subscription"** link from AWS.
 3. Add **chat\:write**, **commands**, and **incoming-webhook** scopes.
 4. Install the app to your workspace.
 5. Use the bot token and signing secret in your `terraform.tfvars` file.
+
+![Slack App Configuration](images/slack_app_configuration.jpg)
 
 ## Testing the Setup
 
@@ -181,11 +185,15 @@ Or use the AWS Console to generate sample findings.
 * Check the channel for a new message.
 * If EC2-related, it will contain instance details and a quarantine button.
 
+![Slack Alert Message](images/slack_alert_message.jpg)
+
 ### 3. One-Click Quarantine
 
 * Clicking the button sends a secure request to API Gateway.
 * The isolation Lambda updates the instance SG.
 * Slack confirms successful isolation.
+
+![Slack Button Interaction](images/slack_button_interaction.jpg)
 
 ## Cleanup
 
