@@ -4,6 +4,15 @@ This repository implements a modern, serverless security automation framework us
 
 > This solution is a cloud-native incident response pipeline that combines AWS GuardDuty, Slack, and Terraform to deliver real-time alerts and interactive remediation of EC2-based threats — all from your chat window.
 
+## 🔧 Key Features
+
+- 🚨 Automated detection of high-severity GuardDuty findings
+- 🧠 EC2-aware alert enrichment with tagging and IP context
+- 💬 Slack notifications with one-click quarantine
+- 🛡️ Secure Slack-to-AWS communication via API Gateway & HMAC verification
+- 📧 Multi-channel alerting (SNS + Slack)
+- ⚙️ Fully infrastructure-as-code via Terraform
+
 ## Table of Contents
 
 * [Overview](#overview)
