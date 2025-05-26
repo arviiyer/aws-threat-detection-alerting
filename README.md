@@ -1,4 +1,4 @@
-# AWS GuardDuty Alert & Response Orchestrator
+# AWS Threat Detection & Response Orchestrator
 
 This repository implements a modern, serverless security automation framework using AWS GuardDuty, Amazon EventBridge, AWS Lambda, Amazon SNS, Amazon API Gateway, and Slack. Built and deployed with Terraform, the solution is designed to detect threats in your AWS environment, notify your team in real-time, and enable one-click EC2 isolation directly from Slack.
 
