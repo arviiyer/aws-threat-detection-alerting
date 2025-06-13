@@ -7,7 +7,7 @@ variable "aws_region" {
 variable "email_address" {
   description = "Email address to receive SNS notifications"
   type        = string
-  default     = "arviiyer@proton.me"
+  default     = "example@email.com"
 }
 
 variable "slack_bot_token" {
